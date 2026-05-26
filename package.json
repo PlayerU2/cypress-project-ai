@@ -1,0 +1,23 @@
+{
+  "name": "cypress-project-ai",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/PlayerU2/cypress-project-ai#readme",
+  "bugs": {
+    "url": "https://github.com/PlayerU2/cypress-project-ai/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PlayerU2/cypress-project-ai.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "cypress": "^15.15.0"
+  }
+}
