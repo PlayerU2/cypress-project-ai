@@ -1,123 +1,182 @@
 # cypress-project-ai
 
-Projeto de automação de testes E2E para o sistema **Hub de Leitura**, uma biblioteca digital educacional para prática de QA. Os testes são escritos com **Cypress** e cobrem os principais fluxos da aplicação, como autenticação e cadastro de usuários.
+Projeto de automacao de testes E2E com Cypress para o sistema **Hub de Leitura**, uma biblioteca digital educacional usada para pratica de QA.
+
+Os testes cobrem fluxos criticos da aplicacao:
+
+- Login
+- Cadastro de usuario
+- Adicao de livros a cesta
+- Validacoes negativas de formulario, autenticacao e duplicidade
 
 ---
 
-## 🖥️ Aplicação sob teste
+## Aplicacao sob teste
 
-**Hub de Leitura** — sistema fictício de treinamento para QA, desenvolvido por [Fábio Araújo](https://github.com/fabioaraujoqa).
+**Hub de Leitura** e um sistema ficticio de biblioteca para treinamento em QA.
 
-- Repositório da aplicação: https://github.com/fabioaraujoqa/hub-de-leitura
+- Repositorio da aplicacao: https://github.com/fabioaraujoqa/hub-de-leitura
 - URL local: `http://localhost:3000`
-- Documentação da API: `http://localhost:3000/api-docs`
+- API Docs: `http://localhost:3000/api-docs`
 - Painel admin: `http://localhost:3000/admin-dashboard.html`
 
-> A aplicação precisa estar rodando localmente antes de executar os testes.
+> A aplicacao Hub de Leitura precisa estar rodando localmente antes de executar os testes.
 
 ---
 
-## 📋 Pré-requisitos
+## Pre-requisitos
 
-- [Node.js](https://nodejs.org/) v18 ou superior
-- [npm](https://www.npmjs.com/) v9 ou superior
-- Hub de Leitura em execução em `http://localhost:3000`
+- Node.js 18 ou superior
+- npm 9 ou superior
+- Cypress instalado via dependencias do projeto
+- Hub de Leitura em execucao em `http://localhost:3000`
 
 ---
 
-## 📦 Instalação
-
-Clone o repositório e instale as dependências:
+## Instalacao
 
 ```bash
-git clone https://github.com/fabioaraujoqa/cypress-project-ai.git
+git clone https://github.com/PlayerU2/cypress-project-ai.git
 cd cypress-project-ai
 npm install
 ```
 
-### Dependências
-
-| Pacote    | Versão   | Descrição                        |
-|-----------|----------|----------------------------------|
-| `cypress` | `^15.15` | Framework de testes E2E          |
-
 ---
 
-## 🚀 Como executar
+## Como executar
 
-### Interface gráfica (recomendado)
-
-Abre o Cypress Test Runner para execução interativa:
+Abrir o Cypress em modo interativo:
 
 ```bash
 npx cypress open
 ```
 
-### Modo headless (CI/CD)
-
-Executa todos os testes no terminal, sem abrir o navegador:
+Executar todos os testes em modo headless:
 
 ```bash
 npx cypress run
 ```
 
-### Executar um arquivo específico
+Executar specs especificos:
 
 ```bash
+npx cypress run --spec "cypress/e2e/login.cy.js"
 npx cypress run --spec "cypress/e2e/cadastro.cy.js"
+npx cypress run --spec "cypress/e2e/adicionar-livro-cesta.cy.js"
 ```
 
 ---
 
-## 🗂️ Estrutura do projeto
+## Estrutura principal
 
-```
+```text
 cypress-project-ai/
-├── cypress/
-│   ├── e2e/
-│   │   ├── login.cy.js       # Testes de autenticação
-│   │   └── cadastro.cy.js    # Testes de cadastro de usuário
-│   ├── fixtures/
-│   │   └── example.json      # Dados de apoio aos testes
-│   └── support/
-│       ├── commands.js       # Comandos customizados do Cypress
-│       └── e2e.js            # Configurações globais de suporte
-├── docs/
-│   ├── hub-de-leitura.md     # Documentação da aplicação
-│   └── rag-hub-de-leitura.md # Base de conhecimento para QA
-├── cypress.config.js         # Configuração do Cypress
-└── package.json
+  cypress/
+    e2e/
+      login.cy.js
+      cadastro.cy.js
+      adicionar-livro-cesta.cy.js
+    fixtures/
+    support/
+      commands.js
+      e2e.js
+  docs/
+    rag-hub-de-leitura.md
+  .agents/
+    qa-automation-standards.md
+    test-strategy.md
+    environments.md
+    mochawesome-reporting.md
+  cypress.config.js
+  package.json
+  README.md
 ```
 
 ---
 
-## 🧪 Casos de teste
+## Padroes adotados nos testes
 
-### Login (`login.cy.js`)
-
-| ID            | Tipo     | Descrição                                          |
-|---------------|----------|----------------------------------------------------|
-| CT-LOGIN-001  | Positivo | Login com credenciais válidas de administrador     |
-
-### Cadastro (`cadastro.cy.js`)
-
-| ID          | Tipo     | Descrição                                                  |
-|-------------|----------|------------------------------------------------------------|
-| CT-CAD-001  | Positivo | Cadastro com dados válidos — redireciona para o dashboard  |
-| CT-CAD-002  | Negativo | Cadastro com e-mail já existente — exibe mensagem de erro  |
-| CT-CAD-003  | Negativo | Campos obrigatórios vazios — impede envio do formulário    |
+- Uso de `cy.env()` em vez de `Cypress.env()`, pois o projeto esta com `allowCypressEnv: false`.
+- Fallback local para `baseUrl` e credenciais de teste documentadas.
+- Uso de seletores estaveis como `id` quando nao ha `data-testid`.
+- Uso de `cy.intercept()` para observar chamadas relevantes da API.
+- Validacao de estado real da aplicacao, como URL, mensagens, `localStorage` e resposta da API.
+- Sem `cy.wait()` com tempo fixo.
+- Testes independentes, limpando cookies e `localStorage` antes de cada cenario.
 
 ---
 
-## 🔑 Credenciais de teste
+## Casos de teste
 
-| Perfil        | E-mail                   | Senha      |
-|---------------|--------------------------|------------|
-| Administrador | admin@biblioteca.com     | admin123   |
-| Usuário comum | usuario@teste.com        | user123    |
+### Login - `cypress/e2e/login.cy.js`
+
+| ID | Tipo | Descricao |
+|---|---|---|
+| CT-LOGIN-001 | Positivo | Deve autenticar administrador com credenciais validas |
+| CT-LOGIN-002 | Positivo | Deve autenticar usuario comum com credenciais validas |
+| CT-LOGIN-003 | Negativo | Deve exibir erro ao informar senha invalida |
+
+Principais validacoes:
+
+- Chamada `POST /api/login`
+- Redirecionamento conforme perfil
+- Token salvo em `localStorage.authToken`
+- Ausencia de token em login invalido
+
+### Cadastro - `cypress/e2e/cadastro.cy.js`
+
+| ID | Tipo | Descricao |
+|---|---|---|
+| CT-CAD-001 | Positivo | Deve criar conta com dados validos e autenticar automaticamente |
+| CT-CAD-002 | Negativo | Deve exibir erro ao tentar cadastrar email ja existente |
+| CT-CAD-003 | Negativo | Deve impedir envio com campos obrigatorios vazios |
+| CT-CAD-004 | Negativo | Deve impedir envio quando confirmacao de senha diverge |
+
+Principais validacoes:
+
+- Chamada `POST /api/register`
+- Login automatico via `POST /api/login`
+- Campos invalidos no formulario
+- Bloqueio de envio para API quando o formulario esta invalido
+- Token salvo apenas em cadastro valido
+
+### Cesta de livros - `cypress/e2e/adicionar-livro-cesta.cy.js`
+
+| ID | Tipo | Descricao |
+|---|---|---|
+| CT-CART-001 | Positivo | Deve adicionar um livro disponivel a cesta com sucesso |
+| CT-CART-002 | Positivo | Deve permitir adicionar dois livros diferentes a cesta |
+| CT-CART-003 | Negativo | Deve exigir autenticacao para finalizar reserva |
+| CT-CART-004 | Negativo | Deve impedir adicionar o mesmo livro duas vezes |
+
+Principais validacoes:
+
+- Busca de livros disponiveis via API
+- Clique no livro pelo titulo real retornado pela API
+- Persistencia da cesta em `localStorage.bookCart`
+- Conteudo exibido na pagina da cesta
+- Prompt de autenticacao no checkout
+- Bloqueio de duplicidade na cesta
 
 ---
 
-## 📄 Licença
+## Credenciais de teste
 
-Uso educacional e acadêmico. Desenvolvido por [Fábio Araújo](https://github.com/fabioaraujoqa).
+| Perfil | Email | Senha |
+|---|---|---|
+| Administrador | `admin@biblioteca.com` | `admin123` |
+| Usuario comum | `usuario@teste.com` | `user123` |
+
+---
+
+## Observacoes tecnicas
+
+- Algumas requisicoes `GET` podem retornar `304 Not Modified`, que e aceito nos testes por ser comportamento valido de cache do navegador.
+- O spec de cesta trata uma excecao conhecida da aplicacao relacionada a `Cannot read properties of null (reading 'document')`, sem mascarar outros erros.
+- Os specs usam valores locais documentados como fallback para facilitar execucao em ambiente de estudo.
+
+---
+
+## Licenca
+
+Uso educacional e academico. Desenvolvido para pratica de automacao de testes E2E com Cypress.
