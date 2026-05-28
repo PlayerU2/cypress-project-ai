@@ -41,6 +41,12 @@ cd cypress-project-ai
 npm install
 ```
 
+Copie o modelo de variaveis de ambiente se quiser customizar a URL ou credenciais:
+
+```bash
+cp .env.example .env
+```
+
 ---
 
 ## Como executar
@@ -48,21 +54,27 @@ npm install
 Abrir o Cypress em modo interativo:
 
 ```bash
-npx cypress open
+npm run test:e2e:open
 ```
 
 Executar todos os testes em modo headless:
 
 ```bash
-npx cypress run
+npm run test:e2e
 ```
 
 Executar specs especificos:
 
 ```bash
-npx cypress run --spec "cypress/e2e/login.cy.js"
-npx cypress run --spec "cypress/e2e/cadastro.cy.js"
-npx cypress run --spec "cypress/e2e/adicionar-livro-cesta.cy.js"
+npm run test:login
+npm run test:cadastro
+npm run test:cesta
+```
+
+Executar com relatorio Mochawesome:
+
+```bash
+npm run test:e2e:report
 ```
 
 ---
@@ -73,10 +85,11 @@ npx cypress run --spec "cypress/e2e/adicionar-livro-cesta.cy.js"
 cypress-project-ai/
   cypress/
     e2e/
-      login.cy.js
-      cadastro.cy.js
-      adicionar-livro-cesta.cy.js
-    fixtures/
+      auth/
+        login.cy.js
+        cadastro.cy.js
+      cesta/
+        adicionar-livro-cesta.cy.js
     support/
       commands.js
       e2e.js
@@ -88,6 +101,7 @@ cypress-project-ai/
     environments.md
     mochawesome-reporting.md
   cypress.config.js
+  .env.example
   package.json
   README.md
 ```
@@ -103,12 +117,13 @@ cypress-project-ai/
 - Validacao de estado real da aplicacao, como URL, mensagens, `localStorage` e resposta da API.
 - Sem `cy.wait()` com tempo fixo.
 - Testes independentes, limpando cookies e `localStorage` antes de cada cenario.
+- Relatorios, screenshots e videos de execucao sao ignorados pelo Git.
 
 ---
 
 ## Casos de teste
 
-### Login - `cypress/e2e/login.cy.js`
+### Login - `cypress/e2e/auth/login.cy.js`
 
 | ID | Tipo | Descricao |
 |---|---|---|
@@ -123,7 +138,7 @@ Principais validacoes:
 - Token salvo em `localStorage.authToken`
 - Ausencia de token em login invalido
 
-### Cadastro - `cypress/e2e/cadastro.cy.js`
+### Cadastro - `cypress/e2e/auth/cadastro.cy.js`
 
 | ID | Tipo | Descricao |
 |---|---|---|
@@ -140,7 +155,7 @@ Principais validacoes:
 - Bloqueio de envio para API quando o formulario esta invalido
 - Token salvo apenas em cadastro valido
 
-### Cesta de livros - `cypress/e2e/adicionar-livro-cesta.cy.js`
+### Cesta de livros - `cypress/e2e/cesta/adicionar-livro-cesta.cy.js`
 
 | ID | Tipo | Descricao |
 |---|---|---|
@@ -174,6 +189,8 @@ Principais validacoes:
 - Algumas requisicoes `GET` podem retornar `304 Not Modified`, que e aceito nos testes por ser comportamento valido de cache do navegador.
 - O spec de cesta trata uma excecao conhecida da aplicacao relacionada a `Cannot read properties of null (reading 'document')`, sem mascarar outros erros.
 - Os specs usam valores locais documentados como fallback para facilitar execucao em ambiente de estudo.
+- `cypress.config.js` ja configura `baseUrl`, timeouts, retries e reporter Mochawesome.
+- A pasta `.playwright-mcp/` foi removida por ser artefato local fora do escopo Cypress.
 
 ---
 
