@@ -1,56 +1,14 @@
-const loginPage = {
-  visit(baseUrl) {
-    cy.visit(`${baseUrl.replace(/\/$/, '')}/login.html`)
-  },
+const { LoginPage } = require('../../pages')
 
-  emailInput() {
-    return cy.get('#email')
-  },
+const loginPage = new LoginPage()
 
-  passwordInput() {
-    return cy.get('#password')
-  },
-
-  submitButton() {
-    return cy.get('#login-btn')
-  },
-
-  login(email, password) {
-    this.emailInput().clear().type(email)
-    this.passwordInput().clear().type(password, { log: false })
-    this.submitButton().click()
-  },
-}
-
-const localDefaults = {
-  baseUrl: 'http://localhost:3000',
-  adminEmail: 'admin@biblioteca.com',
+// Defaults para execução local sem .env configurado (espelham .env.example)
+const envDefaults = {
+  adminEmail:    'admin@biblioteca.com',
   adminPassword: 'admin123',
-  userEmail: 'usuario@teste.com',
-  userPassword: 'user123',
+  userEmail:     'usuario@teste.com',
+  userPassword:  'user123',
 }
-
-const getRequiredValue = (env, key) => {
-  const value = env[key] || localDefaults[key]
-
-  expect(value, `cy.env("${key}")`).to.be.a('string').and.not.be.empty
-  return value
-}
-
-const getBaseUrl = (env) => {
-  const baseUrl = Cypress.config('baseUrl') || getRequiredValue(env, 'baseUrl')
-
-  expect(baseUrl, 'baseUrl configurada').to.be.a('string').and.not.be.empty
-  return baseUrl
-}
-
-const loadLoginEnv = () => cy.env([
-  'baseUrl',
-  'adminEmail',
-  'adminPassword',
-  'userEmail',
-  'userPassword',
-])
 
 const assertTokenPersisted = () => {
   cy.window()
@@ -78,19 +36,16 @@ describe('Login - Hub de Leitura', () => {
   beforeEach(() => {
     cy.clearCookies()
     cy.clearLocalStorage()
-
-    loadLoginEnv().then((env) => {
-      cy.intercept('POST', '**/api/login').as('loginRequest')
-      loginPage.visit(getBaseUrl(env))
-    })
+    cy.intercept('POST', '**/api/login').as('loginRequest')
+    loginPage.visit()
   })
 
   it('CT-LOGIN-001 - deve autenticar administrador com credenciais validas', () => {
-    loadLoginEnv().then((env) => {
-      loginPage.login(
-        getRequiredValue(env, 'adminEmail'),
-        getRequiredValue(env, 'adminPassword'),
-      )
+    cy.env(['adminEmail', 'adminPassword']).then((env) => {
+      const adminEmail    = env.adminEmail    || envDefaults.adminEmail
+      const adminPassword = env.adminPassword || envDefaults.adminPassword
+
+      loginPage.entrar(adminEmail, adminPassword)
     })
 
     cy.wait('@loginRequest')
@@ -100,18 +55,17 @@ describe('Login - Hub de Leitura', () => {
     cy.location('pathname').should('include', 'admin')
     dismissQaGuideIfVisible()
 
-    cy.contains('Painel Administrativo')
-      .should('be.visible')
-
+    cy.contains('Painel Administrativo').should('be.visible')
     assertTokenPersisted()
+    cy.takeEvidence('login-admin-sucesso')
   })
 
   it('CT-LOGIN-002 - deve autenticar usuario comum com credenciais validas', () => {
-    loadLoginEnv().then((env) => {
-      loginPage.login(
-        getRequiredValue(env, 'userEmail'),
-        getRequiredValue(env, 'userPassword'),
-      )
+    cy.env(['userEmail', 'userPassword']).then((env) => {
+      const userEmail    = env.userEmail    || envDefaults.userEmail
+      const userPassword = env.userPassword || envDefaults.userPassword
+
+      loginPage.entrar(userEmail, userPassword)
     })
 
     cy.wait('@loginRequest')
@@ -120,11 +74,14 @@ describe('Login - Hub de Leitura', () => {
 
     cy.location('pathname').should('not.include', 'login')
     assertTokenPersisted()
+    cy.takeEvidence('login-usuario-sucesso')
   })
 
   it('CT-LOGIN-003 - deve exibir erro ao informar senha invalida', () => {
-    loadLoginEnv().then((env) => {
-      loginPage.login(getRequiredValue(env, 'adminEmail'), 'senha-invalida-qa')
+    cy.env(['adminEmail']).then((env) => {
+      const adminEmail = env.adminEmail || envDefaults.adminEmail
+
+      loginPage.entrar(adminEmail, 'senha-invalida-qa')
     })
 
     cy.wait('@loginRequest')
@@ -140,5 +97,7 @@ describe('Login - Hub de Leitura', () => {
     cy.get('body')
       .invoke('text')
       .should('match', /erro|senha|credenciais|invalid/i)
+
+    cy.takeEvidence('login-senha-invalida-erro')
   })
 })

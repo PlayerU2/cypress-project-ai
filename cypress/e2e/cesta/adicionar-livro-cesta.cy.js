@@ -6,84 +6,17 @@ Cypress.on('uncaught:exception', (err) => {
   return true
 })
 
-const catalogPage = {
-  visit(baseUrl) {
-    cy.visit(`${baseUrl.replace(/\/$/, '')}/catalog.html`)
-  },
+const { CatalogoPage, CestaPage, CheckoutPage } = require('../../pages')
 
-  bookList() {
-    return cy.get('#book-list')
-  },
+const catalogoPage  = new CatalogoPage()
+const cestaPage     = new CestaPage()
+const checkoutPage  = new CheckoutPage()
 
-  addBookByTitle(title) {
-    cy.contains('#book-list .card', title)
-      .should('be.visible')
-      .within(() => {
-        cy.get('button.add-to-cart')
-          .should('be.visible')
-          .and('not.be.disabled')
-          .click()
-      })
-  },
+// ─── Utilitários de teste ────────────────────────────────────────────────────
+// Funções auxiliares específicas deste spec (não pertencem ao Page Object).
 
-  addSameBookAgain(title) {
-    cy.contains('#book-list .card', title)
-      .should('be.visible')
-      .within(() => {
-        cy.get('button.add-to-cart')
-          .click({ force: true })
-      })
-  },
-}
-
-const basketPage = {
-  visit(baseUrl) {
-    cy.visit(`${baseUrl.replace(/\/$/, '')}/basket.html`)
-  },
-
-  cartList() {
-    return cy.get('#cart-list')
-  },
-
-  summary() {
-    return cy.get('#cart-summary')
-  },
-
-  checkoutButton() {
-    return cy.get('#checkout-btn')
-  },
-}
-
-const checkoutPage = {
-  loginPrompt() {
-    return cy.get('#login-prompt')
-  },
-}
-
-const localDefaults = {
-  baseUrl: 'http://localhost:3000',
-}
-
-const getRequiredValue = (env, key) => {
-  const value = env[key] || localDefaults[key]
-
-  expect(value, `cy.env("${key}")`).to.be.a('string').and.not.be.empty
-  return value
-}
-
-const getBaseUrl = (env) => {
-  const baseUrl = Cypress.config('baseUrl') || getRequiredValue(env, 'baseUrl')
-
-  expect(baseUrl, 'baseUrl configurada').to.be.a('string').and.not.be.empty
-  return baseUrl
-}
-
-const loadCartEnv = () => cy.env([
-  'baseUrl',
-])
-
-const loadAvailableBooks = (baseUrl, amount = 2) => {
-  return cy.request(`${baseUrl.replace(/\/$/, '')}/api/books?limit=20&page=1`)
+const loadAvailableBooks = (amount = 2) => (
+  cy.request('/api/books?limit=20&page=1')
     .its('body.books')
     .then((books) => {
       const availableBooks = books
@@ -95,7 +28,7 @@ const loadAvailableBooks = (baseUrl, amount = 2) => {
 
       return availableBooks
     })
-}
+)
 
 const getCartItems = () => (
   cy.window()
@@ -117,26 +50,13 @@ const assertCartHasBook = (book) => {
   })
 }
 
-const seedCart = (books) => {
-  const cartItems = books.map((book) => ({
-    id: book.id,
-    title: book.title,
-    author: book.author,
-    category: book.category,
-    cover_image: book.cover_image,
-    notes: '',
-  }))
-
-  cy.window().then((win) => {
-    win.localStorage.setItem('bookCart', JSON.stringify(cartItems))
-  })
-}
-
 const assertCacheableGetSucceeded = (alias) => {
   cy.wait(alias)
     .its('response.statusCode')
     .should('be.oneOf', [200, 304])
 }
+
+// ─── Suite ───────────────────────────────────────────────────────────────────
 
 describe('Adicionar livro a cesta - Hub de Leitura', () => {
   beforeEach(() => {
@@ -146,112 +66,98 @@ describe('Adicionar livro a cesta - Hub de Leitura', () => {
     cy.intercept('GET', '**/api/books?*').as('listBooks')
     cy.intercept('GET', '**/api/books/*').as('bookDetails')
 
-    loadCartEnv().then((env) => {
-      const baseUrl = getBaseUrl(env)
-
-      loadAvailableBooks(baseUrl, 2).as('availableBooks')
-    })
+    loadAvailableBooks(2).as('availableBooks')
   })
 
   it('CT-CART-001 - deve adicionar um livro disponivel a cesta com sucesso', () => {
-    loadCartEnv().then((env) => {
-      catalogPage.visit(getBaseUrl(env))
-    })
-
+    catalogoPage.visit()
     assertCacheableGetSucceeded('@listBooks')
 
     cy.get('@availableBooks').then(([book]) => {
-      catalogPage.bookList().should('contain.text', book.title)
-      catalogPage.addBookByTitle(book.title)
+      catalogoPage.listaLivros.should('contain.text', book.title)
+      catalogoPage.adicionarLivroNaCesta(book.title)
 
-      cy.get('#global-alert-container')
+      catalogoPage.alertaGlobal
         .should('be.visible')
         .and('contain.text', 'foi adicionado')
 
       assertCartSize(1)
       assertCartHasBook(book)
 
-      loadCartEnv().then((env) => {
-        basketPage.visit(getBaseUrl(env))
-      })
-
+      cestaPage.visit()
       assertCacheableGetSucceeded('@bookDetails')
 
-      basketPage.cartList()
+      cestaPage.listaCesta
         .should('be.visible')
         .and('contain.text', book.title)
 
-      basketPage.summary()
+      cestaPage.resumo
         .should('contain.text', 'Total de livros')
         .and('contain.text', '1')
+
+      cy.takeEvidence('livro-adicionado-cesta-sucesso')
     })
   })
 
   it('CT-CART-002 - deve permitir adicionar dois livros diferentes a cesta', () => {
-    loadCartEnv().then((env) => {
-      catalogPage.visit(getBaseUrl(env))
-    })
-
+    catalogoPage.visit()
     assertCacheableGetSucceeded('@listBooks')
 
     cy.get('@availableBooks').then(([firstBook, secondBook]) => {
-      catalogPage.addBookByTitle(firstBook.title)
-      catalogPage.addBookByTitle(secondBook.title)
+      catalogoPage.adicionarLivroNaCesta(firstBook.title)
+      catalogoPage.adicionarLivroNaCesta(secondBook.title)
 
       assertCartSize(2)
       assertCartHasBook(firstBook)
       assertCartHasBook(secondBook)
 
-      loadCartEnv().then((env) => {
-        basketPage.visit(getBaseUrl(env))
-      })
+      cestaPage.visit()
 
-      basketPage.cartList()
+      cestaPage.listaCesta
         .should('contain.text', firstBook.title)
         .and('contain.text', secondBook.title)
 
-      basketPage.summary()
+      cestaPage.resumo
         .should('contain.text', 'Total de livros')
         .and('contain.text', '2')
+
+      cy.takeEvidence('dois-livros-adicionados-cesta')
     })
   })
 
   it('CT-CART-003 - deve exigir autenticacao para finalizar reserva', () => {
     cy.get('@availableBooks').then(([book]) => {
-      loadCartEnv().then((env) => {
-        const baseUrl = getBaseUrl(env)
+      // Seed via localStorage: visita a página primeiro para ter window disponível,
+      // popula a cesta via command e recarrega para renderizar os itens.
+      cestaPage.visit()
+      cy.setBookCart([book])
+      cestaPage.visit()
 
-        basketPage.visit(baseUrl)
-        seedCart([book])
-        basketPage.visit(baseUrl)
-      })
-
-      basketPage.cartList()
+      cestaPage.listaCesta
         .should('be.visible')
         .and('contain.text', book.title)
 
-      basketPage.checkoutButton().click()
+      cestaPage.confirmarCheckout()
 
       cy.location('pathname').should('include', 'checkout')
-      checkoutPage.loginPrompt()
+      checkoutPage.avisoLogin
         .should('be.visible')
         .invoke('text')
         .should('match', /autentica..o necess.ria/i)
+
+      cy.takeEvidence('checkout-sem-autenticacao-bloqueado')
     })
   })
 
   it('CT-CART-004 - deve impedir adicionar o mesmo livro duas vezes', () => {
-    loadCartEnv().then((env) => {
-      catalogPage.visit(getBaseUrl(env))
-    })
-
+    catalogoPage.visit()
     assertCacheableGetSucceeded('@listBooks')
 
     cy.get('@availableBooks').then(([book]) => {
-      catalogPage.addBookByTitle(book.title)
-      catalogPage.addSameBookAgain(book.title)
+      catalogoPage.adicionarLivroNaCesta(book.title)
+      catalogoPage.tentarAdicionarLivroNovamente(book.title)
 
-      cy.get('#global-alert-container')
+      catalogoPage.alertaGlobal
         .should('be.visible')
         .invoke('text')
         .should('match', /j. est. na sua cesta/i)

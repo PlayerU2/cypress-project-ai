@@ -1,39 +1,43 @@
 # cypress-project-ai
 
-Projeto de automacao de testes E2E com Cypress para o sistema **Hub de Leitura**, uma biblioteca digital educacional usada para pratica de QA.
+![Cypress](https://img.shields.io/badge/Cypress-15.x-brightgreen?logo=cypress)
+![Node](https://img.shields.io/badge/Node.js-20.x-green?logo=node.js)
+![CI](https://github.com/PlayerU2/cypress-project-ai/actions/workflows/cypress.yml/badge.svg)
+![License](https://img.shields.io/badge/license-ISC-blue)
 
-Os testes cobrem fluxos criticos da aplicacao:
+Projeto de automação de testes E2E com Cypress para o sistema **Hub de Leitura**, uma biblioteca digital educacional usada para prática de QA.
 
-- Login
-- Cadastro de usuario
-- Adicao de livros a cesta
-- Validacoes negativas de formulario, autenticacao e duplicidade
+Os testes cobrem fluxos críticos da aplicação:
+
+- Login de administrador e usuário comum
+- Cadastro de usuário com validações de formulário
+- Adição de livros à cesta e fluxo de checkout
+- Validações negativas: credenciais inválidas, email duplicado, campos obrigatórios, duplicidade na cesta
 
 ---
 
-## Aplicacao sob teste
+## Aplicação sob teste
 
-**Hub de Leitura** e um sistema ficticio de biblioteca para treinamento em QA.
+**Hub de Leitura** é um sistema fictício de biblioteca para treinamento em QA.
 
-- Repositorio da aplicacao: https://github.com/fabioaraujoqa/hub-de-leitura
+- Repositório da aplicação: https://github.com/fabioaraujoqa/hub-de-leitura
 - URL local: `http://localhost:3000`
 - API Docs: `http://localhost:3000/api-docs`
 - Painel admin: `http://localhost:3000/admin-dashboard.html`
 
-> A aplicacao Hub de Leitura precisa estar rodando localmente antes de executar os testes.
+> A aplicação Hub de Leitura precisa estar rodando localmente antes de executar os testes.
 
 ---
 
-## Pre-requisitos
+## Pré-requisitos
 
-- Node.js 18 ou superior
+- Node.js 20 ou superior
 - npm 9 ou superior
-- Cypress instalado via dependencias do projeto
-- Hub de Leitura em execucao em `http://localhost:3000`
+- Hub de Leitura em execução em `http://localhost:3000`
 
 ---
 
-## Instalacao
+## Instalação
 
 ```bash
 git clone https://github.com/PlayerU2/cypress-project-ai.git
@@ -41,159 +45,234 @@ cd cypress-project-ai
 npm install
 ```
 
-Copie o modelo de variaveis de ambiente se quiser customizar a URL ou credenciais:
+Copie o modelo de variáveis de ambiente:
 
 ```bash
 cp .env.example .env
 ```
 
+> Se o `.env` não for criado, os testes usam os valores padrão do `.env.example` automaticamente.
+
 ---
 
 ## Como executar
 
-Abrir o Cypress em modo interativo:
-
 ```bash
+# Modo interativo (Cypress UI)
 npm run test:e2e:open
-```
 
-Executar todos os testes em modo headless:
-
-```bash
+# Modo headless (todos os testes)
 npm run test:e2e
-```
 
-Executar specs especificos:
-
-```bash
+# Specs individuais
 npm run test:login
 npm run test:cadastro
 npm run test:cesta
-```
 
-Executar com relatorio Mochawesome:
-
-```bash
+# Com relatório Mochawesome (limpa artefatos anteriores)
 npm run test:e2e:report
 ```
 
 ---
 
-## Estrutura principal
+## Estrutura do projeto
 
-```text
+```
 cypress-project-ai/
-  cypress/
-    e2e/
-      auth/
-        login.cy.js
-        cadastro.cy.js
-      cesta/
-        adicionar-livro-cesta.cy.js
-    support/
-      commands.js
-      e2e.js
-  docs/
-    rag-hub-de-leitura.md
-  .agents/
-    qa-automation-standards.md
-    test-strategy.md
-    environments.md
-    mochawesome-reporting.md
-  cypress.config.js
-  .env.example
-  package.json
-  README.md
+├── .github/
+│   ├── prompts/
+│   │   └── criar-page-object.prompt.md   ← prompt Copilot para gerar Page Objects
+│   └── workflows/
+│       └── cypress.yml                   ← pipeline CI GitHub Actions
+├── .agents/
+│   ├── SKILL.md                          ← skill Cypress E2E para o Copilot
+│   ├── qa-automation-standards.md        ← padrões obrigatórios de seletores e estrutura
+│   ├── test-strategy.md                  ← estratégia de testes do projeto
+│   ├── environments.md                   ← configuração de ambientes
+│   ├── mochawesome-reporting.md          ← padrões de relatório
+│   └── skills/
+│       └── page-objects/                 ← skill POM com templates e referências
+├── cypress/
+│   ├── e2e/
+│   │   ├── auth/
+│   │   │   ├── login.cy.js               ← CT-LOGIN-001 a 003
+│   │   │   └── cadastro.cy.js            ← CT-CAD-001 a 004
+│   │   └── cesta/
+│   │       └── adicionar-livro-cesta.cy.js ← CT-CART-001 a 004
+│   ├── fixtures/
+│   │   ├── usuarios.json                 ← dados de usuários para referência e mocks
+│   │   └── livros.json                   ← dados de livros para mocks de API
+│   ├── pages/
+│   │   ├── index.js                      ← barrel file (re-exporta todas as páginas)
+│   │   ├── LoginPage.js
+│   │   ├── CadastroPage.js
+│   │   ├── CatalogoPage.js
+│   │   ├── CestaPage.js
+│   │   └── CheckoutPage.js
+│   └── support/
+│       ├── commands.js                   ← comandos customizados globais
+│       └── e2e.js                        ← setup global e imports
+├── docs/
+│   └── rag-hub-de-leitura.md             ← documentação da aplicação sob teste
+├── cypress.config.js
+├── .env.example                          ← modelo de variáveis (commitar sempre)
+├── package.json
+└── README.md
 ```
 
 ---
 
-## Padroes adotados nos testes
+## Padrões adotados
 
-- Uso de `cy.env()` em vez de `Cypress.env()`, pois o projeto esta com `allowCypressEnv: false`.
-- Fallback local para `baseUrl` e credenciais de teste documentadas.
-- Uso de seletores estaveis como `id` quando nao ha `data-testid`.
-- Uso de `cy.intercept()` para observar chamadas relevantes da API.
-- Validacao de estado real da aplicacao, como URL, mensagens, `localStorage` e resposta da API.
-- Sem `cy.wait()` com tempo fixo.
-- Testes independentes, limpando cookies e `localStorage` antes de cada cenario.
-- Relatorios, screenshots e videos de execucao sao ignorados pelo Git.
+### Page Object Model (POM)
+
+Cada página da aplicação tem uma classe dedicada em `cypress/pages/`, com responsabilidades separadas:
+
+| Camada | O que contém | Onde fica |
+|---|---|---|
+| **Seletores** | `get` properties que retornam `cy.get()` | Classe da página |
+| **Ações** | Métodos que combinam seletores em fluxos, retornam `this` | Classe da página |
+| **Asserções** | `.should()`, `expect()` | Somente no `it()` do spec |
+
+```javascript
+// Exemplo — encadeamento fluente com POM
+const { LoginPage } = require('../../pages')
+const loginPage = new LoginPage()
+
+loginPage.visit().entrar(email, senha)
+cy.wait('@loginRequest').its('response.statusCode').should('eq', 200)
+```
+
+### Hierarquia de seletores
+
+```
+1º  data-testid    → preferência absoluta
+2º  aria-label     → acessibilidade
+3º  id             → aceitável se não for gerado dinamicamente
+4º  name           → bom para inputs de formulário
+5º  cy.contains()  → texto visível, com cautela
+❌  classe CSS      → evitar
+❌  xpath           → nunca
+```
+
+### Outros padrões
+
+- `cy.env([...])` em vez de `Cypress.env()` — projeto usa `allowCypressEnv: false`
+- Fallback local para execução sem `.env` configurado
+- `cy.intercept()` sempre no `beforeEach`, nunca no Page Object
+- Sem `cy.wait(número)` — aliases e interceptações para sincronização
+- Testes independentes com `cy.clearCookies()` e `cy.clearLocalStorage()` por cenário
+- `cy.takeEvidence()` para screenshots nomeados em etapas críticas
 
 ---
 
 ## Casos de teste
 
-### Login - `cypress/e2e/auth/login.cy.js`
+### Login — `cypress/e2e/auth/login.cy.js`
 
-| ID | Tipo | Descricao |
+| ID | Tipo | Descrição |
 |---|---|---|
-| CT-LOGIN-001 | Positivo | Deve autenticar administrador com credenciais validas |
-| CT-LOGIN-002 | Positivo | Deve autenticar usuario comum com credenciais validas |
-| CT-LOGIN-003 | Negativo | Deve exibir erro ao informar senha invalida |
+| CT-LOGIN-001 | Positivo | Deve autenticar administrador com credenciais válidas |
+| CT-LOGIN-002 | Positivo | Deve autenticar usuário comum com credenciais válidas |
+| CT-LOGIN-003 | Negativo | Deve exibir erro ao informar senha inválida |
 
-Principais validacoes:
+### Cadastro — `cypress/e2e/auth/cadastro.cy.js`
 
-- Chamada `POST /api/login`
-- Redirecionamento conforme perfil
-- Token salvo em `localStorage.authToken`
-- Ausencia de token em login invalido
-
-### Cadastro - `cypress/e2e/auth/cadastro.cy.js`
-
-| ID | Tipo | Descricao |
+| ID | Tipo | Descrição |
 |---|---|---|
-| CT-CAD-001 | Positivo | Deve criar conta com dados validos e autenticar automaticamente |
-| CT-CAD-002 | Negativo | Deve exibir erro ao tentar cadastrar email ja existente |
-| CT-CAD-003 | Negativo | Deve impedir envio com campos obrigatorios vazios |
-| CT-CAD-004 | Negativo | Deve impedir envio quando confirmacao de senha diverge |
+| CT-CAD-001 | Positivo | Deve criar conta com dados válidos e autenticar automaticamente |
+| CT-CAD-002 | Negativo | Deve exibir erro ao tentar cadastrar email já existente |
+| CT-CAD-003 | Negativo | Deve impedir envio com campos obrigatórios vazios |
+| CT-CAD-004 | Negativo | Deve impedir envio quando confirmação de senha diverge |
 
-Principais validacoes:
+### Cesta de livros — `cypress/e2e/cesta/adicionar-livro-cesta.cy.js`
 
-- Chamada `POST /api/register`
-- Login automatico via `POST /api/login`
-- Campos invalidos no formulario
-- Bloqueio de envio para API quando o formulario esta invalido
-- Token salvo apenas em cadastro valido
-
-### Cesta de livros - `cypress/e2e/cesta/adicionar-livro-cesta.cy.js`
-
-| ID | Tipo | Descricao |
+| ID | Tipo | Descrição |
 |---|---|---|
-| CT-CART-001 | Positivo | Deve adicionar um livro disponivel a cesta com sucesso |
-| CT-CART-002 | Positivo | Deve permitir adicionar dois livros diferentes a cesta |
-| CT-CART-003 | Negativo | Deve exigir autenticacao para finalizar reserva |
+| CT-CART-001 | Positivo | Deve adicionar um livro disponível à cesta com sucesso |
+| CT-CART-002 | Positivo | Deve permitir adicionar dois livros diferentes à cesta |
+| CT-CART-003 | Negativo | Deve exigir autenticação para finalizar reserva |
 | CT-CART-004 | Negativo | Deve impedir adicionar o mesmo livro duas vezes |
-
-Principais validacoes:
-
-- Busca de livros disponiveis via API
-- Clique no livro pelo titulo real retornado pela API
-- Persistencia da cesta em `localStorage.bookCart`
-- Conteudo exibido na pagina da cesta
-- Prompt de autenticacao no checkout
-- Bloqueio de duplicidade na cesta
 
 ---
 
-## Credenciais de teste
+## CI/CD
+
+O projeto possui pipeline no GitHub Actions (`.github/workflows/cypress.yml`) que executa os testes em **Chrome** e **Firefox** a cada push em `main` e `develop`, e em pull requests para `main`.
+
+Artefatos gerados por execução:
+- Screenshots de falhas (retidos por 7 dias)
+- Vídeos de todas as execuções (retidos por 7 dias)
+- Relatório Mochawesome em HTML
+
+Para usar o pipeline com credenciais reais, configure os seguintes **GitHub Secrets** no repositório:
+
+| Secret | Descrição |
+|---|---|
+| `CYPRESS_ADMIN_EMAIL` | Email do administrador |
+| `CYPRESS_ADMIN_PASSWORD` | Senha do administrador |
+| `CYPRESS_USER_EMAIL` | Email do usuário comum |
+| `CYPRESS_USER_PASSWORD` | Senha do usuário comum |
+
+---
+
+## Credenciais de teste (ambiente local)
 
 | Perfil | Email | Senha |
 |---|---|---|
 | Administrador | `admin@biblioteca.com` | `admin123` |
-| Usuario comum | `usuario@teste.com` | `user123` |
+| Usuário comum | `usuario@teste.com` | `user123` |
 
 ---
 
-## Observacoes tecnicas
+## Observações técnicas
 
-- Algumas requisicoes `GET` podem retornar `304 Not Modified`, que e aceito nos testes por ser comportamento valido de cache do navegador.
-- O spec de cesta trata uma excecao conhecida da aplicacao relacionada a `Cannot read properties of null (reading 'document')`, sem mascarar outros erros.
-- Os specs usam valores locais documentados como fallback para facilitar execucao em ambiente de estudo.
-- `cypress.config.js` ja configura `baseUrl`, timeouts, retries e reporter Mochawesome.
-- A pasta `.playwright-mcp/` foi removida por ser artefato local fora do escopo Cypress.
+- Requisições `GET` podem retornar `304 Not Modified` — aceito nos testes por ser comportamento válido de cache.
+- O spec de cesta trata uma exceção conhecida da aplicação relacionada a `Cannot read properties of null (reading 'document')`, sem mascarar outros erros.
+- `cypress.config.js` configura `baseUrl`, timeouts, retries e reporter Mochawesome de forma centralizada.
 
 ---
 
-## Licenca
+## Histórico de versões
 
-Uso educacional e academico. Desenvolvido para pratica de automacao de testes E2E com Cypress.
+### v5.0 — Page Objects e otimização do projeto
+
+**Page Object Model implementado**
+
+- Criada camada `cypress/pages/` com cinco classes dedicadas por página:
+  - `LoginPage.js` — login com `entrar()`, `preencherEmail()`, `preencherSenha()`, `submeter()`
+  - `CadastroPage.js` — cadastro com `preencherFormulario()` e ações atômicas por campo
+  - `CatalogoPage.js` — catálogo com `adicionarLivroNaCesta()`, `tentarAdicionarLivroNovamente()` e seletor parametrizado `getCardLivro(titulo)`
+  - `CestaPage.js` — cesta com `confirmarCheckout()`
+  - `CheckoutPage.js` — checkout com seletor `avisoLogin`
+- Criado `cypress/pages/index.js` como barrel file centralizando todos os imports
+- Separação estrita de responsabilidades: seletores como `get` properties, ações retornam `this`, asserções exclusivamente nos specs
+
+**Specs refatorados**
+
+- Removidos objetos literais (`loginPage = { ... }`) substituídos por classes POM
+- Eliminados helpers locais redundantes: `localDefaults`, `getRequiredValue`, `getBaseUrl`, `loadXxxEnv`
+- `seedCart` inline substituído por `cy.setBookCart()` (command existente em `commands.js`)
+- Adicionado `cy.takeEvidence()` em etapas críticas de todos os testes
+- Corrigido uso indevido de `Cypress.env()` — substituído por `cy.env([...]).then()` com fallback para execução local sem `.env`
+
+**Skill e prompt Copilot**
+
+- Criada skill `.agents/skills/page-objects/` com SKILL.md e referências separadas:
+  - `references/selectors.md` — hierarquia e padrões de getters
+  - `references/page-class-template.md` — templates para login, formulários, listagens e barrel file
+  - `references/actions.md` — ações atômicas, fluxos compostos, autenticação e interceptação
+- Criado prompt `.github/prompts/criar-page-object.prompt.md` para geração guiada de Page Objects
+
+**CI/CD e estrutura**
+
+- Criado pipeline `.github/workflows/cypress.yml` com execução em Chrome e Firefox em paralelo, upload de screenshots/vídeos/relatórios como artifacts e suporte a GitHub Secrets
+- Criadas fixtures `cypress/fixtures/usuarios.json` e `cypress/fixtures/livros.json`
+- Removidos artefatos locais: `debug.log` e pasta `.github/skills/` vazia
+- README atualizado com badges, árvore de estrutura completa, seção POM, hierarquia de seletores e instruções de CI/CD
+
+---
+
+## Licença
+
+Uso educacional e acadêmico. Desenvolvido para prática de automação de testes E2E com Cypress.

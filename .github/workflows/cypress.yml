@@ -1,0 +1,73 @@
+name: Cypress E2E Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main]
+
+jobs:
+  cypress-run:
+    name: Cypress E2E — ${{ matrix.browser }}
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chrome, firefox]
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Iniciar aplicação Hub de Leitura
+        run: |
+          git clone --depth 1 https://github.com/fabioaraujoqa/hub-de-leitura.git ../hub-de-leitura
+          cd ../hub-de-leitura && npm ci && npm start &
+          npx wait-on http://localhost:3000 --timeout 60000
+
+      - name: Executar testes Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          browser: ${{ matrix.browser }}
+          wait-on: 'http://localhost:3000'
+        env:
+          CYPRESS_BASE_URL: http://localhost:3000
+          CYPRESS_ADMIN_EMAIL: ${{ secrets.CYPRESS_ADMIN_EMAIL }}
+          CYPRESS_ADMIN_PASSWORD: ${{ secrets.CYPRESS_ADMIN_PASSWORD }}
+          CYPRESS_USER_EMAIL: ${{ secrets.CYPRESS_USER_EMAIL }}
+          CYPRESS_USER_PASSWORD: ${{ secrets.CYPRESS_USER_PASSWORD }}
+          TEST_RUN_NAME: ci-${{ matrix.browser }}-${{ github.run_number }}
+
+      - name: Upload de screenshots (falhas)
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: cypress-screenshots-${{ matrix.browser }}
+          path: cypress/screenshots
+          retention-days: 7
+
+      - name: Upload de vídeos
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-videos-${{ matrix.browser }}
+          path: cypress/videos
+          retention-days: 7
+
+      - name: Upload do relatório Mochawesome
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cypress-report-${{ matrix.browser }}
+          path: cypress/reports/mochawesome
+          retention-days: 7

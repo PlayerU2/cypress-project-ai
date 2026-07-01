@@ -1,0 +1,19 @@
+{
+  "admin": {
+    "nome": "Administrador",
+    "email": "admin@biblioteca.com",
+    "senha": "admin123",
+    "perfil": "admin"
+  },
+  "usuario": {
+    "nome": "Usuario Teste",
+    "email": "usuario@teste.com",
+    "senha": "user123",
+    "perfil": "usuario"
+  },
+  "novoUsuario": {
+    "nome": "Usuario Teste Automatizado",
+    "telefone": "11999999999",
+    "senha": "Senha@123"
+  }
+}

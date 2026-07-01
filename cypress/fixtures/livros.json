@@ -1,0 +1,39 @@
+{
+  "mockListagem": {
+    "books": [
+      {
+        "id": 1,
+        "title": "Dom Casmurro",
+        "author": "Machado de Assis",
+        "category": "Literatura Brasileira",
+        "cover_image": "/images/dom-casmurro.jpg",
+        "available_copies": 3
+      },
+      {
+        "id": 2,
+        "title": "O Cortiço",
+        "author": "Aluísio Azevedo",
+        "category": "Literatura Brasileira",
+        "cover_image": "/images/o-cortico.jpg",
+        "available_copies": 2
+      },
+      {
+        "id": 3,
+        "title": "Memórias Póstumas de Brás Cubas",
+        "author": "Machado de Assis",
+        "category": "Literatura Brasileira",
+        "cover_image": "/images/bras-cubas.jpg",
+        "available_copies": 1
+      }
+    ],
+    "total": 3,
+    "page": 1,
+    "limit": 20
+  },
+  "mockListagemVazia": {
+    "books": [],
+    "total": 0,
+    "page": 1,
+    "limit": 20
+  }
+}
